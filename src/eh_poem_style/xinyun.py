@@ -94,5 +94,20 @@ def resolve_rhyme(
     return RhymeResolution(chosen, notes)
 
 
+def context_rhyme_group(line: str) -> str | None:
+    """按整句上下文取末字的常用读音，再归部。"""
+    text = "".join(ch for ch in line if "\u3400" <= ch <= "\u9fff")
+    if not text:
+        return None
+    finals = pinyin(text, style=Style.FINALS, heteronym=False)
+    initials = pinyin(text, style=Style.INITIALS, heteronym=False)
+    if not finals or not finals[-1]:
+        return None
+    final = (finals[-1][0] or "").replace("ü", "v")
+    initial = (initials[-1][0] if initials and initials[-1] else "") or ""
+    groups = _final_groups(final, initial)
+    return groups[0] if groups else None
+
+
 def candidates(group: str, chars: Iterable[str]) -> list[str]:
     return [char for char in chars if group in rhyme_groups(char)]

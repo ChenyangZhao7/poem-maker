@@ -158,7 +158,7 @@ def review_style_card(
     llm: LLMClient | None = None,
     input_fn: Callable[[str], str] = input,
     editor: Callable[[str], str] | None = None,
-) -> str:
+) -> str | None:
     edit = editor or _default_editor
     card = draft
     while True:
@@ -166,11 +166,11 @@ def review_style_card(
         try:
             choice = input_fn("回车接受 / e 编辑 / r 让模型改 / q 放弃：").strip().lower()
         except EOFError:
-            return card
+            return None
         if choice in {"", "a"}:
             return card
         if choice == "q":
-            return card
+            return None
         if choice == "e":
             card = edit(card)
             continue

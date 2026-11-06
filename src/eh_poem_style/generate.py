@@ -9,6 +9,7 @@ from typing import Iterable, Sequence
 
 from eh_poem_style.cipai import Cipai
 from eh_poem_style.corpus import Poem
+from eh_poem_style.llm import LLMError
 from eh_poem_style.models import GenerateRequest, Issue, PoemDraft, Report
 from eh_poem_style.pingze import cjk, tone_of_char
 from eh_poem_style.prompt import (
@@ -216,11 +217,20 @@ def generate(
     report = Report()
     seed_lines = [line for poem in examples for line in poem.lines]
 
-    for attempt in range(1, request.max_attempts + 1):
-        raw = client.complete(
-            messages,
-            response_format={"type": "json_object"},
-        )
+    max_attempts = max(1, request.max_attempts)
+    for attempt in range(1, max_attempts + 1):
+        try:
+            raw = client.complete(
+                messages,
+                response_format={"type": "json_object"},
+            )
+        except LLMError as exc:
+            attempts.append(("", None))
+            report = Report((Issue("error", "llm_error", str(exc)),))
+            if attempt < max_attempts:
+                continue
+            break
+
         parsed: PoemDraft | None = None
         try:
             parsed = parse_draft(raw)
@@ -241,7 +251,7 @@ def generate(
 
         if report.ok:
             break
-        if attempt < request.max_attempts:
+        if attempt < max_attempts:
             messages = messages + [
                 {"role": "assistant", "content": raw},
                 {

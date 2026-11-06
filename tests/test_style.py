@@ -40,6 +40,10 @@ def test_review_accepts_on_enter():
     assert review_style_card("草稿", input_fn=lambda _: "") == "草稿"
 
 
+def test_review_quit_returns_none():
+    assert review_style_card("草稿", input_fn=lambda _: "q") is None
+
+
 def test_review_uses_feedback():
     class Fake:
         def complete(self, messages, **opts):

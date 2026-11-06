@@ -71,6 +71,14 @@ def test_wrong_tone_fails():
     assert any(i.code == "tone_mismatch" for i in r.issues)
 
 
+def test_polyphone_rhyme_uses_context():
+    from eh_poem_style.cipai import Cipai, CipaiLine
+
+    c = Cipai("t", "t", (CipaiLine("平", True, "平", 0),))
+    r = validate_ci(ci_draft(["行"], "t"), c, ["十唐"])
+    assert any(i.code == "rhyme_mismatch" for i in r.issues)
+
+
 def test_xiangjianhuan_switch_rhyme_passes():
     lines = [
         "无言独上西楼",

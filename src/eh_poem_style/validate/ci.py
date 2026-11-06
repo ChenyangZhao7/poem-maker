@@ -5,7 +5,7 @@ from typing import Sequence
 from eh_poem_style.cipai import Cipai
 from eh_poem_style.models import Issue, PoemDraft, Report
 from eh_poem_style.pingze import cjk, tone_of_line
-from eh_poem_style.xinyun import rhyme_groups as char_rhyme_groups
+from eh_poem_style.xinyun import context_rhyme_group
 
 
 def validate_ci(
@@ -90,8 +90,8 @@ def validate_ci(
             continue
 
         char = line[-1]
-        groups = char_rhyme_groups(char)
-        if not groups:
+        group = context_rhyme_group(line)
+        if group is None:
             issues.append(
                 Issue(
                     "error",
@@ -101,12 +101,12 @@ def validate_ci(
                     index=len(line),
                 )
             )
-        elif required not in groups:
+        elif group != required:
             issues.append(
                 Issue(
                     "error",
                     "rhyme_mismatch",
-                    f"第 {line_no} 句韵脚「{char}」属 {'/'.join(sorted(groups))}，要求 {required}",
+                    f"第 {line_no} 句韵脚「{char}」按常用读音属 {group}，要求 {required}",
                     line=line_no,
                     index=len(line),
                 )

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from eh_poem_style.models import Issue, PoemDraft, Report
 from eh_poem_style.xinyun import resolve_rhyme
+from eh_poem_style.xinyun import rhyme_groups as char_rhyme_groups
 
 
 @dataclass(frozen=True)
@@ -86,33 +87,46 @@ def validate_shi(draft: PoemDraft, spec: ShiSpec) -> Report:
         rhyme_chars.append(line[-1])
 
     if rhyme_chars:
-        resolution = resolve_rhyme(rhyme_chars, preferred=spec.rhyme_group)
-        if resolution.group is None:
-            issues.append(
-                Issue(
-                    "error",
-                    "rhyme_mismatch",
-                    f"韵脚 {'/'.join(rhyme_chars)} 不属于同一韵部",
+        if spec.genre == "古体":
+            # 古体从宽：允许邻韵通押、换韵、仄韵；只要求每个韵脚有可判定的韵部。
+            for char in rhyme_chars:
+                if not char_rhyme_groups(char):
+                    issues.append(
+                        Issue(
+                            "error",
+                            "unknown_char",
+                            f"韵脚「{char}」无法判定韵部",
+                        )
+                    )
+        else:
+            resolution = resolve_rhyme(rhyme_chars, preferred=spec.rhyme_group)
+            if resolution.group is None:
+                if resolution.notes:
+                    message = (
+                        f"韵脚 {'/'.join(rhyme_chars)} 多解不唯一："
+                        f"{'/'.join(resolution.notes)}"
+                    )
+                else:
+                    message = f"韵脚 {'/'.join(rhyme_chars)} 不属于同一韵部"
+                issues.append(Issue("error", "rhyme_mismatch", message))
+            elif spec.rhyme_group is not None and resolution.group != spec.rhyme_group:
+                issues.append(
+                    Issue(
+                        "error",
+                        "rhyme_mismatch",
+                        f"韵脚属 {resolution.group}，要求 {spec.rhyme_group}",
+                    )
                 )
-            )
-        elif spec.rhyme_group is not None and resolution.group != spec.rhyme_group:
-            issues.append(
-                Issue(
-                    "error",
-                    "rhyme_mismatch",
-                    f"韵脚属 {resolution.group}，要求 {spec.rhyme_group}",
-                )
-            )
-        for note in resolution.notes:
-            issues.append(Issue("warning", "polyphony", note))
+            for note in resolution.notes:
+                issues.append(Issue("warning", "polyphony", note))
 
-        if len(set(rhyme_chars)) != len(rhyme_chars):
-            issues.append(
-                Issue(
-                    "error",
-                    "duplicate_rhyme",
-                    f"韵脚重复：{'/'.join(rhyme_chars)}",
+            if len(set(rhyme_chars)) != len(rhyme_chars):
+                issues.append(
+                    Issue(
+                        "error",
+                        "duplicate_rhyme",
+                        f"韵脚重复：{'/'.join(rhyme_chars)}",
+                    )
                 )
-            )
 
     return Report(tuple(issues))

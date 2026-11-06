@@ -20,7 +20,6 @@ from eh_poem_style.corpus import (
 from eh_poem_style.generate import generate
 from eh_poem_style.llm import OllamaClient, OpenAICompatClient
 from eh_poem_style.models import GenerateRequest, LLMClient, PoemDraft
-from eh_poem_style.pingze import cjk
 from eh_poem_style.prompt import parse_draft
 from eh_poem_style.style import (
     analyze_corpus,
@@ -31,7 +30,7 @@ from eh_poem_style.style import (
 )
 from eh_poem_style.validate.ci import validate_ci
 from eh_poem_style.validate.shi import spec_for_genre, validate_shi
-from eh_poem_style.xinyun import rhyme_groups as char_rhyme_groups
+from eh_poem_style.xinyun import context_rhyme_group
 
 GENRES = ["古体", "五律", "七律", "五绝", "七绝", "词"]
 
@@ -142,8 +141,23 @@ def _cmd_compare(args) -> int:
     return 0
 
 
+def _strip_frontmatter(text: str) -> str:
+    text = text.lstrip("\ufeff")
+    if text.startswith("---"):
+        lines = text.splitlines()
+        for index in range(1, len(lines)):
+            if lines[index].strip() == "---":
+                text = "\n".join(lines[index + 1 :])
+                break
+    marker = "\n## 修改记录"
+    index = text.find(marker)
+    if index >= 0:
+        text = text[:index]
+    return text
+
+
 def _read_draft(path: Path, genre: str, cipai: str | None) -> PoemDraft:
-    text = path.read_text(encoding="utf-8")
+    text = _strip_frontmatter(path.read_text(encoding="utf-8"))
     if text.lstrip().startswith("{"):
         return parse_draft(text)
     lines = [
@@ -170,9 +184,9 @@ def _cmd_validate(args) -> int:
             for index, line in enumerate(cipai.lines):
                 if not line.rhyme:
                     continue
-                char = cjk(draft.lines[index])[-1] if index < len(draft.lines) else ""
-                possible = char_rhyme_groups(char) if char else frozenset()
-                groups.append(next(iter(possible)) if possible else "?")
+                source = draft.lines[index] if index < len(draft.lines) else ""
+                group = context_rhyme_group(source)
+                groups.append(group or "?")
         report = validate_ci(draft, cipai, groups)
     else:
         spec = spec_for_genre(
@@ -220,6 +234,9 @@ def _cmd_style_review(args) -> int:
         load_style_card(draft_path),
         llm=build_client(profile, config),
     )
+    if card is None:
+        print("已放弃，未写入正式风格卡")
+        return 0
     path = Path("style/style-card.md")
     write_style_card(path, card)
     print(path)

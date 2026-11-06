@@ -66,6 +66,24 @@ def test_duplicate_rhyme_fails():
     assert any(i.code == "duplicate_rhyme" for i in r.issues)
 
 
+def test_gu_ti_allows_rhyme_change():
+    lines = [
+        "行越山丛中",
+        "旧台星棋见",
+        "石阶通天听",
+        "圆环立人言",
+        "悠悠五千载",
+        "但余黄沙鸣",
+        "风中传口谕",
+        "不知起所云",
+    ]
+    r = validate_shi(
+        draft(lines, "古体"),
+        spec_for_genre("古体", line_length=5, first_rhyme=False),
+    )
+    assert r.ok
+
+
 def test_punctuation_ignored():
     d = draft(["黄河入海流，", "更上一层楼。", "欲穷千里目，", "更上泰山头。"], "五绝")
     r = validate_shi(d, spec_for_genre("五绝", first_rhyme=False))

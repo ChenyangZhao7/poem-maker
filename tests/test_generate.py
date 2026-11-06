@@ -1,5 +1,6 @@
 from eh_poem_style.corpus import Poem
 from eh_poem_style.generate import generate
+from eh_poem_style.llm import LLMError
 from eh_poem_style.models import GenerateRequest
 
 
@@ -51,6 +52,43 @@ def test_rejects_exact_copied_line(tmp_path):
     assert result.attempts == 2
     assert result.report.ok
     assert "校验未通过" in fake.calls[1][-1]["content"]
+
+
+def test_transport_error_retries_and_writes_run(tmp_path):
+    good = (
+        '{"title":"t","genre":"五绝","cipai":null,'
+        '"lines":["白日依山尽","黄河入海流","欲穷千里目","更上一层楼"],'
+        '"rhyme":[]}'
+    )
+
+    class Flaky:
+        def __init__(self):
+            self.calls = 0
+
+        def complete(self, messages, **opts):
+            self.calls += 1
+            if self.calls == 1:
+                raise LLMError("temporary boom")
+            return good
+
+    req = GenerateRequest(prompt="写一首", genre="五绝", first_rhyme=False)
+    result = generate(req, Flaky(), "", [], None, None, runs_dir=tmp_path)
+    assert result.attempts == 2
+    assert result.report.ok
+    assert (result.run_dir / "attempt-1.txt").exists()
+
+
+def test_all_transport_errors_still_write_run(tmp_path):
+    class Dead:
+        def complete(self, messages, **opts):
+            raise LLMError("down")
+
+    req = GenerateRequest(prompt="写一首", genre="五绝", first_rhyme=False)
+    result = generate(req, Dead(), "", [], None, None, runs_dir=tmp_path)
+    assert result.attempts == 3
+    assert not result.report.ok
+    assert result.run_dir.exists()
+    assert any(issue.code == "llm_error" for issue in result.report.issues)
 
 
 def test_run_files_are_written(tmp_path):

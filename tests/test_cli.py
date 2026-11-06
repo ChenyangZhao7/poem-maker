@@ -28,6 +28,30 @@ def test_unknown_command_returns_nonzero(capsys):
     assert main(["nope"]) != 0
 
 
+def test_validate_frontmatter_file(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    poem = tmp_path / "poem.md"
+    poem.write_text(
+        "---\n"
+        "title: t\n"
+        "genre: 五绝\n"
+        "status: final\n"
+        "---\n\n"
+        "白日依山尽\n"
+        "黄河入海流\n"
+        "欲穷千里目\n"
+        "更上一层楼\n\n"
+        "## 修改记录\n\n"
+        "```diff\n无修改\n```\n",
+        encoding="utf-8",
+    )
+    code = main(
+        ["validate", str(poem), "--genre", "五绝", "--no-first-rhyme"]
+    )
+    assert code == 0
+    assert "校验：通过" in capsys.readouterr().out
+
+
 def test_generate_end_to_end(tmp_path, monkeypatch, capsys):
     (tmp_path / "corpus" / "seed").mkdir(parents=True)
     (tmp_path / "corpus" / "seed" / "seed.md").write_text(

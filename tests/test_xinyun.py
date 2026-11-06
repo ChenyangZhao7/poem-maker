@@ -37,6 +37,13 @@ def test_preferred_group_wins():
     assert resolution.group == "二波"
 
 
+def test_context_rhyme_group_uses_most_common_reading():
+    from eh_poem_style.xinyun import context_rhyme_group
+
+    assert context_rhyme_group("独行") == "十一庚"  # xíng
+    assert context_rhyme_group("银行") == "十唐"  # háng
+
+
 def test_candidates_filters_by_group():
     from eh_poem_style.xinyun import candidates
 
