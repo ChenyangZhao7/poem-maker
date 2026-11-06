@@ -83,6 +83,20 @@ def test_accept_writes_diff(tmp_path):
     assert "修改记录" in text
 
 
+def test_accept_does_not_overwrite_existing(tmp_path):
+    run = tmp_path / "runs" / "r3"
+    run.mkdir(parents=True)
+    (run / "draft.md").write_text("# 同题\n\n一句\n", encoding="utf-8")
+    first = accept_run(
+        "r3", runs_dir=tmp_path / "runs", poems_dir=tmp_path / "poems"
+    )
+    second = accept_run(
+        "r3", runs_dir=tmp_path / "runs", poems_dir=tmp_path / "poems"
+    )
+    assert first != second
+    assert first.exists() and second.exists()
+
+
 def test_accept_without_edit_has_no_diff(tmp_path):
     run = tmp_path / "runs" / "r2"
     run.mkdir(parents=True)

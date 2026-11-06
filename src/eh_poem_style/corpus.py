@@ -130,6 +130,14 @@ def accept_run(
     today = date.today()
     slug = re.sub(r"[^\w\u4e00-\u9fff]+", "-", title).strip("-")[:40] or "untitled"
     out = poems_dir / f"{today:%Y}" / f"{today:%m}" / f"{today:%Y-%m-%d}-{slug}.md"
+    if out.exists():
+        counter = 2
+        while True:
+            candidate = out.with_name(f"{out.stem}-{counter}{out.suffix}")
+            if not candidate.exists():
+                out = candidate
+                break
+            counter += 1
     out.parent.mkdir(parents=True, exist_ok=True)
 
     cipai_value = json.dumps(cipai, ensure_ascii=False) if cipai else "null"
