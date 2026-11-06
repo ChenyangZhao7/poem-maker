@@ -87,7 +87,7 @@ def prepare_constraints(
     if request.genre != "词":
         if request.rhyme_group:
             group: str | None = request.rhyme_group
-        elif stats is not None:
+        elif stats is not None and stats.shi_rhyme_groups:
             group = _pick_group(stats.shi_rhyme_groups, None, char_list, "十唐")
         else:
             group = None

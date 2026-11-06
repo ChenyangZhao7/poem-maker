@@ -1,0 +1,21 @@
+name: 浣溪沙
+variant: 自定义
+sections:
+- lines:
+  - pattern: 中仄中平中仄平
+    rhyme: true
+    rhyme_tone: 平
+  - pattern: 中平中仄仄平平
+    rhyme: true
+    rhyme_tone: 平
+  - pattern: 中平中仄仄平平
+    rhyme: true
+    rhyme_tone: 平
+  - pattern: 中仄中平平仄仄
+    rhyme: false
+  - pattern: 中平中仄仄平平
+    rhyme: true
+    rhyme_tone: 平
+  - pattern: 中平中仄仄平平
+    rhyme: true
+    rhyme_tone: 平

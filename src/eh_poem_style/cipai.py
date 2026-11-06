@@ -10,6 +10,7 @@ Tone = Literal["平", "仄"]
 
 _PUNCT = set(" \t\r\n，。、；：,.;:")
 _MARKER_YUN = ("（韵）", "(韵)")
+_MARKER_JU = ("（句）", "(句)")
 _MARKER_PING = ("（平韵）", "(平韵)")
 _MARKER_ZE = ("（仄韵）", "(仄韵)")
 _MARKER_CHANGE = ("（换韵）", "(换韵)")
@@ -95,6 +96,14 @@ def normalize_pattern(text: str, line_no: int = 1) -> tuple[str, bool, Tone | No
         for marker in _MARKER_YUN:
             if text.startswith(marker, index):
                 rhyme = True
+                index += len(marker)
+                matched_marker = True
+                break
+        if matched_marker:
+            continue
+
+        for marker in _MARKER_JU:
+            if text.startswith(marker, index):
                 index += len(marker)
                 matched_marker = True
                 break

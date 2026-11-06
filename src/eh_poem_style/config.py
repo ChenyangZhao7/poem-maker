@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -19,6 +19,8 @@ class ModelProfile:
     temperature: float = 0.8
     max_tokens: int = 4096
     timeout: float = 60.0
+    backend: str = "openai"
+    extra: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -47,6 +49,9 @@ def _build_profile(name: str, raw: object) -> ModelProfile:
     for key in ("base_url", "api_key", "model"):
         if key not in raw:
             raise ConfigError(f"models.{name} 缺少 {key}")
+    extra = raw.get("extra", {})
+    if not isinstance(extra, dict):
+        raise ConfigError(f"models.{name}.extra 必须是表")
     return ModelProfile(
         name=name,
         base_url=str(raw["base_url"]).rstrip("/"),
@@ -55,6 +60,8 @@ def _build_profile(name: str, raw: object) -> ModelProfile:
         temperature=float(raw.get("temperature", 0.8)),
         max_tokens=int(raw.get("max_tokens", 4096)),
         timeout=float(raw.get("timeout", 60.0)),
+        backend=str(raw.get("backend", "openai")),
+        extra=dict(extra),
     )
 
 

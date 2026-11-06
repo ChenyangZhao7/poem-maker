@@ -18,7 +18,7 @@ from eh_poem_style.corpus import (
     parse_seed_markdown,
 )
 from eh_poem_style.generate import generate
-from eh_poem_style.llm import OpenAICompatClient
+from eh_poem_style.llm import OllamaClient, OpenAICompatClient
 from eh_poem_style.models import GenerateRequest, LLMClient, PoemDraft
 from eh_poem_style.pingze import cjk
 from eh_poem_style.prompt import parse_draft
@@ -39,7 +39,10 @@ GENRES = ["古体", "五律", "七律", "五绝", "七绝", "词"]
 def build_client(profile_name: str, config: Config) -> LLMClient:
     if profile_name not in config.models:
         raise ValueError(f"配置中没有模型档案：{profile_name}")
-    return OpenAICompatClient(config.models[profile_name])
+    profile = config.models[profile_name]
+    if profile.backend == "ollama":
+        return OllamaClient(profile)
+    return OpenAICompatClient(profile)
 
 
 def _load_seed() -> list[Poem]:

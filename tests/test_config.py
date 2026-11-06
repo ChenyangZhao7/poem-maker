@@ -26,6 +26,19 @@ def test_missing_profile_raises(tmp_path):
         load_config(p)
 
 
+def test_profile_extra_table(tmp_path):
+    p = tmp_path / "config.toml"
+    p.write_text(
+        'default_profile = "x"\n\n'
+        '[models.x]\nbase_url = "https://api.example/v1"\n'
+        'api_key = "k"\nmodel = "m"\n\n'
+        '[models.x.extra]\nthink = false\n',
+        encoding="utf-8",
+    )
+    cfg = load_config(p)
+    assert cfg.models["x"].extra == {"think": False}
+
+
 def test_missing_env_key_raises(tmp_path, monkeypatch):
     monkeypatch.delenv("NOPE_KEY", raising=False)
     p = tmp_path / "config.toml"

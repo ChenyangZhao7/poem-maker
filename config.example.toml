@@ -12,6 +12,10 @@ timeout = 120
 base_url = "http://127.0.0.1:11434/v1"
 api_key = "local"
 model = "qwen3.5:4b"
+backend = "ollama"
 temperature = 0.8
 max_tokens = 4096
 timeout = 240
+
+[models.local.extra]
+think = false

@@ -107,6 +107,13 @@ def _examples_text(examples: Sequence[Poem]) -> str:
     )
 
 
+def _analysis_only(style_card: str) -> str:
+    """风格卡里的“示例”与提示词的作品列表重复，组装提示词时去掉。"""
+    marker = "\n## 示例"
+    index = style_card.find(marker)
+    return style_card[:index].rstrip() if index >= 0 else style_card
+
+
 def _ci_rules(cipai: Cipai, rhyme_groups: Sequence[str]) -> str:
     lines = [f"词牌：{cipai.name}（{cipai.variant}）"]
     rhyme_index = 0
@@ -153,7 +160,7 @@ def build_messages(request: GenerateRequest, ctx: PromptContext) -> list[dict]:
         parts.append("【韵部】" + "、".join(ctx.rhyme_groups))
     if ctx.candidate_chars:
         parts.append("【候选韵脚字】" + "、".join(ctx.candidate_chars))
-    parts.append("【风格卡】\n" + ctx.style_card)
+    parts.append("【风格卡】\n" + _analysis_only(ctx.style_card))
     parts.append("【作者作品】\n" + _examples_text(ctx.examples))
 
     return [

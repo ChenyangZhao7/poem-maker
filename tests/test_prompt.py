@@ -64,6 +64,22 @@ def test_build_messages_for_shi():
     assert "荒草" in user
 
 
+def test_style_card_examples_are_not_duplicated():
+    ctx = PromptContext(
+        style_card="分析\n\n## 示例\n荒草高天斜风吹",
+        examples=[Poem("01 测试", ("荒草高天斜风吹",), "诗", None, "")],
+        spec=spec_for_genre("七绝", first_rhyme=False),
+        cipai=None,
+        rhyme_groups=("十唐",),
+        candidate_chars=(),
+    )
+    messages = build_messages(
+        GenerateRequest(prompt="写一首", genre="七绝"),
+        ctx,
+    )
+    assert messages[1]["content"].count("荒草高天斜风吹") == 1
+
+
 def test_build_messages_for_ci():
     cipai = load_cipai(Path("data/cipai/rumengling.yaml"))
     ctx = PromptContext(

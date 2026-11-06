@@ -193,11 +193,17 @@ timeout = 60
 [models.local]
 base_url = "http://127.0.0.1:11434/v1"
 api_key = "local"
-model = "your-local-model"
+model = "qwen3.5:4b"
+backend = "ollama"
 temperature = 0.8
-max_tokens = 2048
-timeout = 120
+max_tokens = 4096
+timeout = 240
+
+[models.local.extra]
+think = false
 ```
+
+`backend = "ollama"` 走原生 `/api/chat`（`think=false` + JSON schema）；`backend = "openai"` 走 `/v1/chat/completions`。
 
 `models.py`：
 
@@ -483,7 +489,7 @@ Expected: FAIL，模块不存在。
 `normalize_pattern`：
 
 - 去掉空白、`，`、`。`、`、`、`；`、`：`。
-- `（韵）`、`(韵)`、`（平韵）`、`（仄韵）`、`（换韵）` 作为标记；`△` → 平韵，`▲` → 仄韵。
+- `（韵）`、`(韵)`、`（平韵）`、`（仄韵）`、`（换韵）` 作为标记；`（句）`/`(句)` 表示不押韵；`△` → 平韵，`▲` → 仄韵。
 - `⊙`、`中`、`可平可仄` → `中`；`○` → `平`；`●` → `仄`。
 - 其它字符视为非法，抛 `CipaiParseError(line_no=1, col=1-based位置, message=...)`。
 
@@ -970,6 +976,7 @@ git commit -m "feat: analyze corpus and build style card"
 - Consumes: `ModelProfile`、`PoemDraft`、`LLMClient`（Task 1），`Poem`（Task 7），`Cipai`（Task 4）。
 - Produces:
   - `OpenAICompatClient(profile: ModelProfile, transport: httpx.BaseTransport | None = None)`：POST `{base_url}/chat/completions`，Bearer key；非 2xx 抛 `LLMError`。`transport` 仅用于测试。
+  - `OllamaClient(profile: ModelProfile, transport: httpx.BaseTransport | None = None)`：POST `{base_url 去掉 /v1}/api/chat`，固定 `think=False`、`format` 为 JSON schema；用于 qwen3.5:4b 这类思考模型。
   - `DraftParseError(message: str)`。
   - `parse_draft(text: str) -> PoemDraft`：支持纯 JSON、```json 围栏、前后夹话。
   - `PromptContext(style_card: str, examples: Sequence[Poem], spec: ShiSpec | None, cipai: Cipai | None, rhyme_groups: Sequence[str], candidate_chars: Sequence[str])` — frozen dataclass。
@@ -1028,8 +1035,10 @@ def test_client_posts_chat_completions(monkeypatch):
 
 - `OpenAICompatClient.__init__(profile, transport=None)`；用 `httpx.Client(transport=transport, timeout=profile.timeout)`。
 - `complete` 返回 `data["choices"][0]["message"]["content"]`；缺失抛 `LLMError`。
+- `OllamaClient` 用 `/api/chat`，`think=False`，`format` 传只含 title/genre/cipai/lines/rhyme 的 JSON schema；`max_tokens` 映射到 `options.num_predict`。
 - `build_messages` 系统提示词固定包含：角色（中文诗词助手）、必须输出 JSON、字段 schema、不得解释、韵脚必须在给定候选内、词必须逐字合谱。
 - 用户消息包含：白话内容、体裁、词牌与谱（若词）、韵部与候选韵字、风格卡、全部作品（或 `--max-examples` 限制后的示例）。
+- 风格卡在提示词里只取“分析段”，去掉卡内的 `## 示例`，避免与作品列表重复。
 - 提示词中明确：诗不要求平仄；词必须严格。
 
 - [ ] **Step 6: 运行测试，确认通过**
@@ -1299,7 +1308,7 @@ sections:
 
 - [ ] **Step 6: 写 CLI 端到端测试（假模型）**
 
-在 `cli.py` 暴露 `build_client(profile_name: str, config: Config) -> LLMClient`，测试里 monkeypatch 它返回 `FakeLLM`。测试目标：`main(["generate", "--genre", "五绝", "--prompt", "写一首", "--profile", "fake"])` 返回 `0`，输出含"白日依山尽"。
+在 `cli.py` 暴露 `build_client(profile_name: str, config: Config) -> LLMClient`，按 `profile.backend` 返回 `OllamaClient` 或 `OpenAICompatClient`；测试里 monkeypatch 它返回 `FakeLLM`。测试目标：`main(["generate", "--genre", "五绝", "--prompt", "写一首", "--profile", "fake"])` 返回 `0`，输出含"白日依山尽"。
 
 - [ ] **Step 7: 运行测试，确认通过**
 

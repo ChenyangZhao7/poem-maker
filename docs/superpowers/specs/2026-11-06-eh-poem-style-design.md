@@ -238,9 +238,10 @@ EH-Poem-Style/
 ### 6.8 模型适配
 
 - `llm.py` 只暴露 `complete(messages, **opts) -> str`。
-- 配置：`base_url`、`api_key`、`model`、`temperature`、`max_tokens`、超时。
-- 兼容 OpenAI Chat Completions 协议；DeepSeek、OpenAI、本地兼容服务均可。
-- **配置档案（profile）**：`config.toml` 可写多套 `[models.<name>]`。v1 预置 `deepseek`（DeepSeek V4.1）与 `local` 两个占位档案，用户填自己的地址与模型名。
+- 配置：`base_url`、`api_key`、`model`、`temperature`、`max_tokens`、超时、`backend`。
+- `backend = "openai"`：兼容 OpenAI Chat Completions 协议；DeepSeek、OpenAI 等走这条。
+- `backend = "ollama"`：走 Ollama 原生 `/api/chat`，固定 `think=false` 且用 JSON schema 约束输出。原因是 `qwen3.5:4b` 这类思考模型在 OpenAI 兼容 `/v1` 下会把输出预算耗在思考上，`content` 为空；原生接口能正确关闭思考。
+- **配置档案（profile）**：`config.toml` 可写多套 `[models.<name>]`。v1 预置 `deepseek`（DeepSeek V4.1）与 `local`（qwen3.5:4b）两个档案。
 - `generate` 用 `--profile` 选择；`compare` 对同一请求依次跑多个 profile，并排输出诗歌与校验报告。
 - API Key 只从配置文件或环境变量读取，不写进仓库。
 - 不在代码中写死任何厂商。
@@ -329,7 +330,8 @@ EH-Poem-Style/
 - **词也用中华新韵**；词的平仄按整句上下文的最常用读音判定，不为了合谱改用生僻读音。
 - **风格卡默认纳入全部 56 首作品**（可 `--max-examples N` 限制）；提示词要求不整句照抄，生成后做整句查重；风格卡必须先经人工审查或多轮对话修改，确认后才生效。
 - 词牌由用户按需提供"词牌名 + 平仄谱"。
-- 模型：用户有 OpenAI 兼容接口与 Key；v1 接 DeepSeek V4.1 与本地模型两套配置，并支持同一请求的对比输出。
+- 模型：用户有 OpenAI 兼容接口与 Key；v1 接 DeepSeek V4.1 与本地 qwen3.5:4b 两套配置，并支持同一请求的对比输出。
+- 本地 qwen3.5:4b 走 Ollama 原生 `/api/chat`，用 `think=false` + JSON schema 约束输出；OpenAI 兼容 `/v1` 在思考模型上会返回空 `content`。
 - v1 不训练模型；语料持续沉淀，微调作为未来可选升级。
 - 本地工具，模型可替换。
 

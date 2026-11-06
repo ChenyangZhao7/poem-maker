@@ -22,6 +22,10 @@ def test_normalize_triangle_means_ze_rhyme():
     assert normalize_pattern("中仄中平▲") == ("中仄中平", True, "仄")
 
 
+def test_normalize_ju_marker():
+    assert normalize_pattern("中仄中平平仄仄（句）") == ("中仄中平平仄仄", False, None)
+
+
 def test_normalize_keyi_ping_ze():
     assert normalize_pattern("可平可仄平") == ("中平", False, None)
 
