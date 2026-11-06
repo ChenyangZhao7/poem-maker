@@ -17,6 +17,13 @@ python -m pytest -q
 python -m eh_poem_style --help
 ```
 
+## 语料与 few-shot
+
+- `corpus/seed/seed.md`：用户最初的 56 首，只读。
+- `style/fewshot.txt`：精选 10 首，进入提示词；其余作品只参与统计与将来微调。
+- `corpus/drafts/`：AI 生成或 AI 参与的草稿（`status: draft`），不进入 few-shot。
+- `corpus/poems/`：用户确认的定稿（`status: final`）。
+
 设计与计划：
 
 - 设计：`docs/superpowers/specs/2026-11-06-eh-poem-style-design.md`

@@ -37,6 +37,25 @@ class StyleStats:
     top_ngrams: list[str]
 
 
+FEWSHOT_PATH = Path("style/fewshot.txt")
+
+
+def load_fewshot(
+    poems: Sequence[Poem], path: Path = FEWSHOT_PATH
+) -> list[Poem]:
+    """按 style/fewshot.txt 的标题顺序取精选示例；文件缺失时退回全部。"""
+    if not path.exists():
+        return list(poems)
+    titles = [
+        line.strip()
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    by_title = {poem.title: poem for poem in poems}
+    selected = [by_title[title] for title in titles if title in by_title]
+    return selected or list(poems)
+
+
 def analyze_corpus(poems: Sequence[Poem]) -> StyleStats:
     chars: Counter[str] = Counter()
     lengths: Counter[int] = Counter()

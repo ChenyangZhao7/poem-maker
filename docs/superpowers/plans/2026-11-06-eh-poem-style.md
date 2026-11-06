@@ -880,7 +880,8 @@ git commit -m "feat: import and dedupe seed poems"
 **Interfaces:**
 - Consumes: `Poem`（Task 7），`xinyun`（Task 2），`pingze`（Task 3），`LLMClient`（Task 1，可空）。
 - Produces:
-  - `DEFAULT_EXAMPLE_COUNT: int | None = None`（`None` = 全部 56 首）。
+  - `DEFAULT_EXAMPLE_COUNT: int | None = None`（`None` = 传进来的全部示例）。
+  - `load_fewshot(poems, path=Path("style/fewshot.txt")) -> list[Poem]`：按清单顺序取精选示例；清单缺失时退回全部。
   - `StyleStats(poem_count, ci_count, char_freq, line_lengths, shi_rhyme_groups, ci_rhyme_groups, top_ngrams)` — frozen dataclass。
   - `analyze_corpus(poems: Sequence[Poem]) -> StyleStats`。
   - `build_style_card(stats: StyleStats, poems: Sequence[Poem], llm: LLMClient | None = None, example_count: int | None = DEFAULT_EXAMPLE_COUNT) -> str`。
@@ -892,7 +893,12 @@ git commit -m "feat: import and dedupe seed poems"
 
 ```python
 from eh_poem_style.corpus import Poem
-from eh_poem_style.style import analyze_corpus, build_style_card, review_style_card
+from eh_poem_style.style import (
+    analyze_corpus,
+    build_style_card,
+    load_fewshot,
+    review_style_card,
+)
 
 def test_stats_counts():
     poems = [
@@ -923,6 +929,15 @@ def test_card_uses_llm_text():
     card = build_style_card(analyze_corpus([]), [], llm=Fake())
     assert "荒草" in card
 
+def test_load_fewshot_selects_in_file_order(tmp_path):
+    poems = [
+        Poem("01 甲", ("一句",), "诗", None, ""),
+        Poem("02 乙", ("二句",), "诗", None, ""),
+    ]
+    p = tmp_path / "fewshot.txt"
+    p.write_text("02 乙\n01 甲\n", encoding="utf-8")
+    assert [x.title for x in load_fewshot(poems, p)] == ["02 乙", "01 甲"]
+
 def test_review_accepts_on_enter():
     assert review_style_card("草稿", input_fn=lambda _: "") == "草稿"
 
@@ -944,8 +959,8 @@ Expected: FAIL，模块不存在。
 - [ ] **Step 3: 实现**
 
 - 统计：CJK 字频；行长分布；诗、词的韵脚都用 `xinyun.resolve_rhyme` 归部；2-gram 频次（去停用词表：的、了、不、人、一、是、在、有、我、他、这、那、中、上、下、来、去、时、日、天、云、山、水 等只作过滤，不删意象词）。
-- `build_style_card` 输出 Markdown，固定小节：常用字、高频词组、意象域、句法偏好、情感基调、用韵习惯、忌用词、代表示例（默认全部 56 首；`example_count` 可限制）。
-- 有 `llm` 时，把统计与全部作品（或限制后的示例）发给模型，要求"只输出风格卡正文，不评论"；模型失败则退回纯统计版。
+- `build_style_card` 输出 Markdown，固定小节：常用字、高频词组、意象域、句法偏好、情感基调、用韵习惯、忌用词、代表示例（传进来的精选 10 首；`example_count` 可再限制）。
+- 有 `llm` 时，把统计与精选示例发给模型，要求"只输出风格卡正文，不评论"；模型失败则退回纯统计版。
 - `review_style_card` 循环：打印草稿 → 回车接受 / `e` 调 `editor` / `r` 读修改意见让模型重写 / `q` 放弃。`editor` 默认写临时文件并调用 `notepad`。
 - `style build` 写 `style/style-card.draft.md`；`style review` 确认后才写 `style/style-card.md`。
 
@@ -1037,7 +1052,7 @@ def test_client_posts_chat_completions(monkeypatch):
 - `complete` 返回 `data["choices"][0]["message"]["content"]`；缺失抛 `LLMError`。
 - `OllamaClient` 用 `/api/chat`，`think=False`，`format` 传只含 title/genre/cipai/lines/rhyme 的 JSON schema；`max_tokens` 映射到 `options.num_predict`。
 - `build_messages` 系统提示词固定包含：角色（中文诗词助手）、必须输出 JSON、字段 schema、不得解释、韵脚必须在给定候选内、词必须逐字合谱。
-- 用户消息包含：白话内容、体裁、词牌与谱（若词）、韵部与候选韵字、风格卡、全部作品（或 `--max-examples` 限制后的示例）。
+- 用户消息包含：白话内容、体裁、词牌与谱（若词）、韵部与候选韵字、风格卡、`style/fewshot.txt` 选出的 10 首示例。
 - 风格卡在提示词里只取“分析段”，去掉卡内的 `## 示例`，避免与作品列表重复。
 - 提示词中明确：诗不要求平仄；词必须严格。
 
@@ -1145,6 +1160,7 @@ git commit -m "feat: generate with validation retry and run persistence"
   - `accept_run(run_id: str, edited_path: Path | None = None, runs_dir=Path("runs"), poems_dir=Path("corpus/poems")) -> Path`。
   - 返回值：写入的定稿路径。
   - 定稿 Markdown 含 YAML frontmatter：`title`、`date`、`genre`、`cipai`、`status: final`、`source: generated`。
+- AI 生成或 AI 参与的草稿先放 `corpus/drafts/`（`status: draft`）；`accept` 只用于用户确认的定稿。
 
 - [ ] **Step 1: 写失败测试**
 
@@ -1299,7 +1315,7 @@ sections:
 
 - [ ] **Step 5: 接通 CLI**
 
-- `generate`：读配置、加载风格卡与种子、加载词牌、构建 client、调用 `generate`、打印诗与报告。
+- `generate`：读配置、加载风格卡、全部种子（算统计）与 `style/fewshot.txt` 精选 10 首（进提示词）、加载词牌、构建 client、调用 `generate`、打印诗与报告。
 - `compare`：`--profiles deepseek,local`。
 - `validate`：从文件读 `PoemDraft`（简单 JSON 或 `---` frontmatter），调用校验器。
 - `style build`：`analyze_corpus` + `build_style_card` + 写 `style/style-card.draft.md`；`style review`：`review_style_card` 确认后写 `style/style-card.md`。

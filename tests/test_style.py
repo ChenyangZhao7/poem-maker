@@ -1,5 +1,10 @@
 from eh_poem_style.corpus import Poem
-from eh_poem_style.style import analyze_corpus, build_style_card, review_style_card
+from eh_poem_style.style import (
+    analyze_corpus,
+    build_style_card,
+    load_fewshot,
+    review_style_card,
+)
 
 
 def test_stats_counts():
@@ -52,3 +57,19 @@ def test_review_uses_feedback():
     answers = iter(["r", "多写荒草", ""])
     card = review_style_card("草稿", llm=Fake(), input_fn=lambda _: next(answers))
     assert card == "改后的卡"
+
+
+def test_load_fewshot_selects_in_file_order(tmp_path):
+    poems = [
+        Poem("01 甲", ("一句",), "诗", None, ""),
+        Poem("02 乙", ("二句",), "诗", None, ""),
+        Poem("03 丙", ("三句",), "诗", None, ""),
+    ]
+    path = tmp_path / "fewshot.txt"
+    path.write_text("# 精选\n03 丙\n01 甲\n", encoding="utf-8")
+    assert [p.title for p in load_fewshot(poems, path)] == ["03 丙", "01 甲"]
+
+
+def test_load_fewshot_missing_returns_all(tmp_path):
+    poems = [Poem("01 甲", ("一句",), "诗", None, "")]
+    assert load_fewshot(poems, tmp_path / "nope.txt") == poems

@@ -24,6 +24,7 @@ from eh_poem_style.prompt import parse_draft
 from eh_poem_style.style import (
     analyze_corpus,
     build_style_card,
+    load_fewshot,
     load_style_card,
     review_style_card,
     write_style_card,
@@ -106,12 +107,13 @@ def _cmd_generate(args) -> int:
     request = GenerateRequest(**{**request.__dict__, "profile": profile})
     poems = _load_seed()
     stats = analyze_corpus(poems)
+    examples = load_fewshot(poems)
     cipai = _find_cipai(args.cipai) if args.genre == "词" else None
     result = generate(
         request,
         build_client(profile, config),
         _load_style(),
-        poems,
+        examples,
         cipai,
         stats,
     )
@@ -127,13 +129,14 @@ def _cmd_compare(args) -> int:
     request = GenerateRequest(**{**request.__dict__, "profile": names[0]})
     poems = _load_seed()
     stats = analyze_corpus(poems)
+    examples = load_fewshot(poems)
     cipai = _find_cipai(args.cipai) if args.genre == "词" else None
     clients = {name: build_client(name, config) for name in names}
     path = compare(
         request,
         clients,
         _load_style(),
-        poems,
+        examples,
         cipai,
         stats,
     )
@@ -217,7 +220,8 @@ def _cmd_style_build(args) -> int:
     profile = args.profile or config.default_profile
     poems = _load_seed()
     stats = analyze_corpus(poems)
-    card = build_style_card(stats, poems, llm=build_client(profile, config))
+    examples = load_fewshot(poems)
+    card = build_style_card(stats, examples, llm=build_client(profile, config))
     path = Path("style/style-card.draft.md")
     write_style_card(path, card)
     print(path)
