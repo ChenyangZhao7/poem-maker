@@ -1,0 +1,27 @@
+[project]
+name = "eh-poem-style"
+version = "0.1.0"
+description = "A local Chinese poetry generator tuned to one person's style."
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "pypinyin>=0.53",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+eh-poem = "eh_poem_style.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,17 @@
+default_profile = "deepseek"
+
+[models.deepseek]
+base_url = "https://api.deepseek.com/v1"
+api_key = "env:DEEPSEEK_API_KEY"
+model = "deepseek-flash"   # DeepSeek V4.1 Flash；按账号实际模型名修改
+temperature = 0.8
+max_tokens = 4096
+timeout = 120
+
+[models.local]
+base_url = "http://127.0.0.1:11434/v1"
+api_key = "local"
+model = "qwen3.5:4b"
+temperature = 0.8
+max_tokens = 4096
+timeout = 240
