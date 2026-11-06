@@ -1,0 +1,14 @@
+name: 忆秦娥
+variant: 正体
+sections:
+  - lines:
+      - {pattern: "平中仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中平中仄平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中平中仄", rhyme: false}
+      - {pattern: "仄平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中平中仄平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中平中仄平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中平中仄", rhyme: false}
+      - {pattern: "仄平平仄", rhyme: true, rhyme_tone: 仄}

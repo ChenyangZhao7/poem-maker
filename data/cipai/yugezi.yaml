@@ -1,0 +1,9 @@
+name: 渔歌子
+variant: 正体
+sections:
+  - lines:
+      - {pattern: "中仄平平仄仄平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中平中仄仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中中仄", rhyme: false}
+      - {pattern: "仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中平中仄仄平平", rhyme: true, rhyme_tone: 平}

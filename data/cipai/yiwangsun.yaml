@@ -1,0 +1,9 @@
+name: 忆王孙
+variant: 正体
+sections:
+  - lines:
+      - {pattern: "中平中仄仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中仄平平中仄平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中仄平平中仄平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中仄平平中仄平", rhyme: true, rhyme_tone: 平}
