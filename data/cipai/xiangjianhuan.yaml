@@ -1,0 +1,11 @@
+name: 相见欢
+variant: 正体
+sections:
+  - lines:
+      - {pattern: "中平中仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中仄中平平仄仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中中仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中仄中平平仄仄平平", rhyme: true, rhyme_tone: 平}

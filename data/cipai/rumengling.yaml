@@ -1,0 +1,11 @@
+name: 如梦令
+variant: 正体
+sections:
+  - lines:
+      - {pattern: "中仄仄平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中仄仄平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中仄仄平平", rhyme: false}
+      - {pattern: "中仄仄平平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "平仄", rhyme: true, rhyme_tone: 仄}
+      - {pattern: "中仄仄平平仄", rhyme: true, rhyme_tone: 仄}

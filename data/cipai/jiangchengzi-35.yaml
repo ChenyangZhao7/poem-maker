@@ -1,0 +1,12 @@
+name: 江城子
+variant: 单调三十五字
+sections:
+  - lines:
+      - {pattern: "中平中仄仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中中中中", rhyme: false}
+      - {pattern: "中仄仄平平", rhyme: true, rhyme_tone: 平}
+      - {pattern: "中仄中平平仄仄", rhyme: false}
+      - {pattern: "平仄仄", rhyme: false}
+      - {pattern: "仄平平", rhyme: true, rhyme_tone: 平}
