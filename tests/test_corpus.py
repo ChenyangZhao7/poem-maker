@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from eh_poem_style.corpus import (
+    accept_run,
     detect_cipai,
     import_seed,
     parse_seed_markdown,
@@ -61,3 +62,36 @@ def test_import_seed_same_path_does_not_raise(tmp_path):
     src.write_text("## 01 测试\n\n一句\n", encoding="utf-8")
     count, _ = import_seed(src, src)
     assert count == 1
+
+
+def test_accept_writes_diff(tmp_path):
+    run = tmp_path / "runs" / "r1"
+    run.mkdir(parents=True)
+    (run / "draft.md").write_text("白日依山尽\n黄河入海流\n", encoding="utf-8")
+    edited = tmp_path / "edited.md"
+    edited.write_text("白日依山尽\n黄河入海流\n更上一层楼\n", encoding="utf-8")
+    out = accept_run(
+        "r1",
+        edited,
+        runs_dir=tmp_path / "runs",
+        poems_dir=tmp_path / "poems",
+    )
+    text = out.read_text(encoding="utf-8")
+    assert "status: final" in text
+    assert "更上一层楼" in text
+    assert "---" in text
+    assert "修改记录" in text
+
+
+def test_accept_without_edit_has_no_diff(tmp_path):
+    run = tmp_path / "runs" / "r2"
+    run.mkdir(parents=True)
+    (run / "draft.md").write_text("一句\n二句\n", encoding="utf-8")
+    out = accept_run(
+        "r2",
+        runs_dir=tmp_path / "runs",
+        poems_dir=tmp_path / "poems",
+    )
+    text = out.read_text(encoding="utf-8")
+    assert "一句" in text
+    assert "无修改" in text
